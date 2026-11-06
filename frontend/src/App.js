@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-
-const API_BASE = "http://localhost:5000/api/tickets";
+import React, { useState } from "react";
 
 const INITIAL_TICKETS = [
   {
@@ -34,10 +32,6 @@ const INITIAL_TICKETS = [
 
 export default function App() {
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Form states
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("TECHNICAL");
   const [priority, setPriority] = useState("MEDIUM");
@@ -45,29 +39,7 @@ export default function App() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [search, setSearch] = useState("");
 
-  // 1. Fetch tickets (Connects to backend API if available, else uses initial data)
-  const fetchTickets = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API_BASE);
-      if (res.ok) {
-        const data = await res.json();
-        setTickets(data);
-      }
-    } catch (err) {
-      // Graceful fallback for production live preview
-      console.log("Local API not running, using live data state");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
-  // 2. Create Ticket
-  const handleAddTicket = async (e) => {
+  const handleAddTicket = (e) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
@@ -81,33 +53,12 @@ export default function App() {
       createdAt: new Date().toISOString().split("T")[0],
     };
 
-    try {
-      await fetch(API_BASE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTicket),
-      });
-    } catch (err) {
-      console.log("Using live local state update");
-    }
-
     setTickets([newTicket, ...tickets]);
     setTitle("");
     setDescription("");
   };
 
-  // 3. Update Status / Priority
-  const handleUpdate = async (id, updatedFields) => {
-    try {
-      await fetch(`${API_BASE}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFields),
-      });
-    } catch (err) {
-      console.log("Using live local state update");
-    }
-
+  const handleUpdate = (id, updatedFields) => {
     const updated = tickets.map((t) =>
       t.id === id ? { ...t, ...updatedFields } : t
     );
@@ -118,14 +69,7 @@ export default function App() {
     }
   };
 
-  // 4. Delete Ticket
-  const handleDelete = async (id) => {
-    try {
-      await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-    } catch (err) {
-      console.log("Using live local state delete");
-    }
-
+  const handleDelete = (id) => {
     setTickets(tickets.filter((t) => t.id !== id));
     if (selectedTicket && selectedTicket.id === id) {
       setSelectedTicket(null);
@@ -464,7 +408,7 @@ export default function App() {
               <strong>Status:</strong> {selectedTicket.status}
             </p>
             <p>
-              <strong>Date:</strong> {selectedTicket.createdAt || "2026-11-06"}
+              <strong>Date:</strong> {selectedTicket.createdAt}
             </p>
             <p>
               <strong>Description:</strong>
